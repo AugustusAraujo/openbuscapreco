@@ -1,6 +1,6 @@
 [package]
 name = "buscapreco"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 description = "Port do servidor Gertec Busca Preço (ServUni) — serviço + TUI"
 license = "MIT"
