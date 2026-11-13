@@ -367,7 +367,7 @@ fn dispatch(state: &Arc<State>, req: AdminRequest) -> AdminResponse {
                 })
                 .collect();
             AdminResponse::Success {
-                data: AdminData::Terminals { terminals },
+                data: Box::new(AdminData::Terminals { terminals }),
             }
         }
         AdminRequest::LogTail { n } => {
@@ -384,13 +384,13 @@ fn dispatch(state: &Arc<State>, req: AdminRequest) -> AdminResponse {
                 .rev()
                 .collect();
             AdminResponse::Success {
-                data: AdminData::Log { lines },
+                data: Box::new(AdminData::Log { lines }),
             }
         }
         AdminRequest::GetConfig => AdminResponse::Success {
-            data: AdminData::Config {
+            data: Box::new(AdminData::Config {
                 config: state.config.read().unwrap().clone(),
-            },
+            }),
         },
         AdminRequest::SetConfig { config } => {
             if let Err(e) = config.save(&state.config_path) {
@@ -400,9 +400,9 @@ fn dispatch(state: &Arc<State>, req: AdminRequest) -> AdminResponse {
             }
             *state.config.write().unwrap() = config;
             AdminResponse::Success {
-                data: AdminData::Done {
+                data: Box::new(AdminData::Done {
                     detail: "config salva (reinicie para reconectar o banco)".into(),
-                },
+                }),
             }
         }
         AdminRequest::SendText {
@@ -430,20 +430,20 @@ fn dispatch(state: &Arc<State>, req: AdminRequest) -> AdminResponse {
                 },
                 Some(db) => match db.lookup(&barcode) {
                     Ok(Some(p)) => AdminResponse::Success {
-                        data: AdminData::Price {
+                        data: Box::new(AdminData::Price {
                             barcode,
                             found: true,
                             name: Some(p.name),
                             price: Some(apply_currency(&prefix, &p.price)),
-                        },
+                        }),
                     },
                     Ok(None) => AdminResponse::Success {
-                        data: AdminData::Price {
+                        data: Box::new(AdminData::Price {
                             barcode,
                             found: false,
                             name: None,
                             price: None,
-                        },
+                        }),
                     },
                     Err(e) => AdminResponse::Error { message: e },
                 },
@@ -476,9 +476,9 @@ fn send_to(state: &Arc<State>, id: Option<&str>, frame: &[u8], what: &str) -> Ad
     }
     state.push_log(format!("[{}] admin {what} -> {sent} terminal(is)", now()));
     AdminResponse::Success {
-        data: AdminData::Done {
+        data: Box::new(AdminData::Done {
             detail: format!("{sent} terminal(is)"),
-        },
+        }),
     }
 }
 

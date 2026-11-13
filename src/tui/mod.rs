@@ -28,10 +28,8 @@ fn event_loop(
         terminal.draw(|f| ui::draw(f, &mut app))?;
         if crossterm::event::poll(Duration::from_millis(250))? {
             if let Event::Key(key) = crossterm::event::read()? {
-                if key.kind == KeyEventKind::Press {
-                    if handle_key(&mut app, key) {
-                        return Ok(());
-                    }
+                if key.kind == KeyEventKind::Press && handle_key(&mut app, key) {
+                    return Ok(());
                 }
             }
         }
@@ -162,7 +160,7 @@ fn handle_term_key(app: &mut App, key: KeyEvent) {
                 &crate::admin::AdminRequest::Restart { id: None },
             ) {
                 Ok(crate::admin::AdminResponse::Success { data }) => {
-                    if let crate::admin::AdminData::Done { detail } = data {
+                    if let crate::admin::AdminData::Done { detail } = &*data {
                         app.status = format!("restart: {detail}");
                     }
                 }
@@ -189,7 +187,7 @@ fn handle_msg_key(app: &mut App, key: KeyEvent) -> bool {
             prompt.fields[prompt.idx].pop();
         }
         KeyCode::Char(c) => {
-            if !(prompt.idx == 2 && !c.is_ascii_digit()) {
+            if prompt.idx != 2 || c.is_ascii_digit() {
                 prompt.fields[prompt.idx].push(c);
             }
         }
@@ -208,7 +206,7 @@ fn handle_msg_key(app: &mut App, key: KeyEvent) -> bool {
                 app.msg = None;
                 match client::request(app.daemon_port(), &req) {
                     Ok(crate::admin::AdminResponse::Success { data }) => {
-                        if let crate::admin::AdminData::Done { detail } = data {
+                        if let crate::admin::AdminData::Done { detail } = &*data {
                             app.status = format!("mensagem para {dest}: {detail}");
                         }
                     }
@@ -239,15 +237,15 @@ fn handle_price_key(app: &mut App, key: KeyEvent) {
                     barcode: code.clone(),
                 },
             ) {
-                Ok(crate::admin::AdminResponse::Success { data }) => match data {
+                Ok(crate::admin::AdminResponse::Success { data }) => match &*data {
                     crate::admin::AdminData::Price {
                         found, name, price, ..
                     } => {
-                        let linha = if found {
+                        let linha = if *found {
                             format!(
-                                "{code} → {} — R$ {}",
-                                name.unwrap_or_default(),
-                                price.unwrap_or_default()
+                                "{code} → {} — {}",
+                                name.clone().unwrap_or_default(),
+                                price.clone().unwrap_or_default()
                             )
                         } else {
                             format!("{code} → nao encontrado")
@@ -309,12 +307,12 @@ fn refresh(app: &mut App, force: bool) {
                     app.daemon_port(),
                     &crate::admin::AdminRequest::ListTerminals,
                 ) {
-                    if let crate::admin::AdminData::Terminals { terminals } = data {
+                    if let crate::admin::AdminData::Terminals { terminals } = &*data {
                         app.daemon_on = true;
                         if app.term_selected >= terminals.len() {
                             app.term_selected = terminals.len().saturating_sub(1);
                         }
-                        app.terminals = terminals;
+                        app.terminals = terminals.clone();
                     }
                 } else {
                     app.daemon_on = false;
@@ -329,7 +327,7 @@ fn refresh(app: &mut App, force: bool) {
                     app.daemon_port(),
                     &crate::admin::AdminRequest::LogTail { n: 100 },
                 ) {
-                    if let crate::admin::AdminData::Log { lines } = data {
+                    if let crate::admin::AdminData::Log { lines } = &*data {
                         app.daemon_on = true;
                         let max = lines.len().saturating_sub(1) as u16;
                         if app.log_follow {
@@ -337,7 +335,7 @@ fn refresh(app: &mut App, force: bool) {
                         } else {
                             app.log_scroll = app.log_scroll.min(max);
                         }
-                        app.log_lines = lines;
+                        app.log_lines = lines.clone();
                     }
                 } else {
                     app.daemon_on = false;

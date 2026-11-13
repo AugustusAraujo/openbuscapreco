@@ -42,7 +42,7 @@ pub struct TerminalInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "ok", rename_all = "snake_case")]
 pub enum AdminResponse {
-    Success { data: AdminData },
+    Success { data: Box<AdminData> },
     Error { message: String },
 }
 
