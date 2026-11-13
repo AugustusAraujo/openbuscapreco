@@ -1,0 +1,24 @@
+# Configuração do servidor Busca Preço (port Rust do ServUni Gertec)
+# Escutar na porta do protocolo dos terminais (Gertec: 6500)
+listen_port = 6500
+# Canal admin (JSON-lines, localhost) usado pela TUI
+admin_port = 6501
+# Segundos que o display exibe o preço
+display_time_secs = 5
+# Prefixo exibido antes do preço no display (vazio = sem prefixo)
+currency_prefix = "R$"
+# Mensagem de boas-vindas (idle)
+idle_line1 = "Busca Preco"
+idle_line2 = "Passe o produto"
+# Keepalive #live? (o terminal cai a conexão após 120s sem tráfego)
+keepalive_secs = 60
+
+[database]
+# MySQL: mysql://usuario:senha@host:3306/buscapreco
+# PostgreSQL: postgres://usuario:senha@host:5432/buscapreco
+url = "mysql://buscapreco:buscapreco@db:3306/buscapreco"
+# Tabela e colunas customizáveis (apenas letras, numeros, _ e .)
+table = "pricetable"
+barcode_column = "barcode"
+name_column = "name"
+price_column = "price"

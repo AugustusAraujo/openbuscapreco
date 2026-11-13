@@ -1,0 +1,14 @@
+services:
+  buscapreco:
+    build: .
+    container_name: buscapreco
+    restart: unless-stopped
+    ports:
+      - "6500:6500"   # protocolo dos terminais (TCP)
+      - "127.0.0.1:6501:6501"  # canal admin (TUI) — só localhost
+    volumes:
+      - ./config.toml:/data/config.toml
+      - ./log:/data/log
+    environment:
+      # sobrescreve o database_url do config.toml se definido
+      DATABASE_URL: ${DATABASE_URL:-}
